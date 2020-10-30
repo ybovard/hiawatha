@@ -1,6 +1,6 @@
 # Description
 
-docker implementation of hiawatha webserver (https://www.hiawatha-webserver.org/).
+Docker implementation of hiawatha webserver (https://www.hiawatha-webserver.org/).
 
 The container will run as www-data, so ports <1024 are not usable.
 
