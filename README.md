@@ -2,7 +2,7 @@
 
 docker implementation of hiawatha webserver (https://www.hiawatha-webserver.org/).
 
-The container will run as www-data, so port <1024 are not usable.
+The container will run as www-data, so ports <1024 are not usable.
 
 # Usage
 By default, the container will listen to 8080 without any SSL configuration. The website root directory is located at /var/www/hiawatha
