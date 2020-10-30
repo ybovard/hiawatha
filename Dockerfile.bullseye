@@ -1,0 +1,43 @@
+FROM debian:bullseye
+
+ARG HIAWATHA_VERSION=10.11
+
+ENV BUILD_PKG \
+  wget \
+  cmake \
+  libxml2-dev \
+  libxslt-dev \
+  zlib1g-dev
+
+# updating os
+RUN apt update && apt upgrade -y
+
+# getting sources
+WORKDIR /hiawatha/src
+RUN apt install ${BUILD_PKG} -y \
+    && wget https://www.hiawatha-webserver.org/files/hiawatha-$HIAWATHA_VERSION.tar.gz \
+    && tar -zxf hiawatha-$HIAWATHA_VERSION.tar.gz \
+    && mkdir hiawatha-$HIAWATHA_VERSION/build
+
+# configure, compile and install
+WORKDIR /hiawatha/src/hiawatha-$HIAWATHA_VERSION/build
+RUN cmake -DCMAKE_INSTALL_PREFIX=/ -DPID_DIR=/run/hiawatha .. \
+    && make \
+    && make install/strip
+
+# prepare
+RUN sed -i 's/^	Port = 80$/	Port = 8080/' /etc/hiawatha/hiawatha.conf \
+    && mkdir -p /var/lib/hiawatha/upload && chown www-data:www-data /var/lib/hiawatha/upload \
+    && chown -R www-data:www-data /var/log/hiawatha \
+    && chown -R www-data:www-data /run/hiawatha
+
+# clean
+WORKDIR /
+RUN rm -rf /hiawatha
+
+# start
+WORKDIR /var/www
+EXPOSE 8080/tcp
+USER www-data
+ENTRYPOINT [ "/usr/sbin/hiawatha", "-d" ]
+CMD ["-c", "/etc/hiawatha" ]
