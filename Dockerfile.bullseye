@@ -27,6 +27,10 @@ RUN cmake -DCMAKE_INSTALL_PREFIX=/ -DPID_DIR=/run/hiawatha .. \
 
 # prepare
 RUN sed -i 's/^	Port = 80$/	Port = 8080/' /etc/hiawatha/hiawatha.conf \
+    && sed -i 's|^SystemLogfile = .*|SystemLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
+    && sed -i 's|^GarbageLogfile = .*|GarbageLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
+    && sed -i 's|^AccessLogfile = .*|AccessLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
+    && sed -i 's|^ErrorLogfile = .*|ErrorLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
     && mkdir -p /var/lib/hiawatha/upload && chown www-data:www-data /var/lib/hiawatha/upload \
     && chown -R www-data:www-data /var/log/hiawatha \
     && chown -R www-data:www-data /run/hiawatha
