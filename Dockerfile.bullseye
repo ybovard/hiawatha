@@ -21,27 +21,30 @@ RUN apt install ${BUILD_PKG} -y \
 
 # configure, compile and install
 WORKDIR /hiawatha/src/hiawatha-$HIAWATHA_VERSION/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/ -DPID_DIR=/run/hiawatha .. \
+RUN cmake -DCMAKE_INSTALL_PREFIX=/ -DPID_DIR=/var/www/hiawatha/run -DWEBROOT_DIR=/var/www/hiawatha/web -DWORK_DIR=/var/www/hiawatha/work .. \
     && make \
     && make install/strip
 
-# prepare
+# prepare user and dir
+RUN groupadd hiawatha && useradd -d /var/www/hiawatha -u 1000 -g hiawatha hiawatha \
+    && chown -R hiawatha:hiawatha /var/www/hiawatha
+
+# adapt last mile in configuration
 RUN sed -i 's/^	Port = 80$/	Port = 8080/' /etc/hiawatha/hiawatha.conf \
     && sed -i 's|^SystemLogfile = .*|SystemLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
     && sed -i 's|^GarbageLogfile = .*|GarbageLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
     && sed -i 's|^AccessLogfile = .*|AccessLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
     && sed -i 's|^ErrorLogfile = .*|ErrorLogfile = /dev/stdout|' /etc/hiawatha/hiawatha.conf \
-    && mkdir -p /var/lib/hiawatha/upload && chown www-data:www-data /var/lib/hiawatha/upload \
-    && chown -R www-data:www-data /var/log/hiawatha \
-    && chown -R www-data:www-data /run/hiawatha
+    && echo "ExploitLogfile = /dev/stdout" >> /etc/hiawatha/hiawatha.conf
+
 
 # clean
 WORKDIR /
-RUN rm -rf /hiawatha
+RUN rm -rf /hiawatha/src
 
 # start
-WORKDIR /var/www
+WORKDIR /var/www/hiawatha
 EXPOSE 8080/tcp
-USER 33
+USER 1000
 ENTRYPOINT [ "/usr/sbin/hiawatha", "-d" ]
 CMD ["-c", "/etc/hiawatha" ]
